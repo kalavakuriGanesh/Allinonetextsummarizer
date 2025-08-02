@@ -81,7 +81,7 @@ streamlit run app.py
 
 ## 👨‍💻 Credits
 
-Made by KARE Students  
+Made by Ganesh KARE 
 Powered by Google Gemini AI, Streamlit, and open-source libraries
 
 ---
