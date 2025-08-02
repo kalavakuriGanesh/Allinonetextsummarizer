@@ -45,6 +45,53 @@ def summarize_with_gemini(text):
         st.error(f"Gemini API error: {str(e)}")
         return None
 
+def display_output_in_new_div(text, summary, target_lang):
+    """
+    Display the output results in a new div with custom styling.
+    """
+    # Add a new div for the output
+    st.markdown("""
+        <div class='output-container'>
+            <h2 style='text-align: center; color: #4CAF50;'>📊 Results</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Original Summary
+    st.markdown("""
+        <div class='output-card'>
+            <h3 style='color: #4CAF50;'>📊 Original Summary</h3>
+            <p>{}</p>
+        </div>
+    """.format(summary), unsafe_allow_html=True)
+
+    # Translated Summary
+    if target_lang != "en":
+        translated_summary = translator.translate(summary, dest=target_lang).text
+        st.markdown("""
+            <div class='output-card'>
+                <h3 style='color: #2196F3;'>🔄 Translated Summary</h3>
+                <p>{}</p>
+            </div>
+        """.format(translated_summary), unsafe_allow_html=True)
+    else:
+        translated_summary = summary
+        st.markdown("""
+            <div class='output-card'>
+                <h3 style='color: #2196F3;'>🔄 Translated Summary</h3>
+                <p>Translation not needed (English selected)</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # Audio Version
+    audio_path = create_audio(translated_summary, target_lang)
+    st.markdown("""
+        <div class='output-card'>
+            <h3 style='color: #FFC107;'>🎧 Audio Version</h3>
+        </div>
+    """, unsafe_allow_html=True)
+    st.audio(audio_path)
+    os.unlink(audio_path)
+
 # Set page configuration
 st.set_page_config(
     page_title="Text Processing & Summarization",
@@ -352,43 +399,15 @@ def main():
                     text = extract_text_from_url(url)
                 st.success("URL content loaded!")
 
-        if st.button("🚀 Process Content", use_container_width=True):
+        if st.button("🚀 Process Content"):
             if not text:
-                st.markdown("""
-                    <div class='error-message'>
-                        Please provide some content to process!
-                    </div>
-                """, unsafe_allow_html=True)
+                st.error("Please provide some content to process!")
                 return
 
             with st.spinner("🔄 Processing your content..."):
-                # Create result sections without tabs
                 summary = summarize_with_gemini(text)
                 if summary:
-                    st.markdown("<div class='output-card'>", unsafe_allow_html=True)
-                    col_sum1, col_sum2 = st.columns(2)
-                    
-                    with col_sum1:
-                        st.markdown("### 📊 Original Summary")
-                        st.info(summary)
-
-                    with col_sum2:
-                        st.markdown("### 🔄 Translated Version")
-                        if target_lang != "en":
-                            translated_summary = translator.translate(summary, dest=target_lang).text
-                            st.success(translated_summary)
-                        else:
-                            st.info("Translation not needed (English selected)")
-                            translated_summary = summary
-                    st.markdown("</div>", unsafe_allow_html=True)
-
-                    st.markdown("<div class='output-card'>", unsafe_allow_html=True)
-                    st.markdown("### 🎧 Audio Version")
-                    # Simplified audio section without speed control
-                    audio_path = create_audio(translated_summary, target_lang)
-                    st.audio(audio_path)
-                    os.unlink(audio_path)
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    display_output_in_new_div(text, summary, target_lang)
 
     # Enhanced footer
     st.markdown("---")
